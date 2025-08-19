@@ -6,67 +6,104 @@ import { SITE } from "../../config/site";
 
 // Función que genera todas las rutas estáticas
 export async function getStaticPaths() {
-  // Obtener datos del portfolio para crear array de prueba
+  // Validar que las variables de entorno estén disponibles
+  if (!SITE.apiBase || SITE.apiBase.includes('localhost')) {
+    console.warn('API Base not configured for production, returning empty paths');
+    return [];
+  }
+
   let portfolioData: any[] = [];
+  let posts: any[] = [];
+
   try {
+    // Obtener datos del portfolio con timeout y mejor manejo de errores
     const portfolioResponse = await fetch(`${SITE.apiBase}/wp/v2/portfolio?_embed&per_page=100`, {
-      headers: { Accept: "application/json" }
+      headers: { 
+        Accept: "application/json",
+        'User-Agent': 'Astro-Build/1.0'
+      },
+      signal: AbortSignal.timeout(10000) // 10 segundos timeout
     });
 
-    if (portfolioResponse.ok && (portfolioResponse.headers.get("content-type") || "").includes("application/json")) {
-      const data = await portfolioResponse.json();
-      // Normalizar a array si la API devuelve objeto de error u otra forma
-      portfolioData = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
-    } else {
-      // consumir texto (HTML/error) y dejar array vacío
-      await portfolioResponse.text();
-      portfolioData = [];
+    if (portfolioResponse.ok) {
+      const portfolioText = await portfolioResponse.text();
+      try {
+        const data = JSON.parse(portfolioText);
+        portfolioData = Array.isArray(data) ? data : [];
+      } catch (parseError) {
+        console.warn('Failed to parse portfolio data:', parseError);
+        portfolioData = [];
+      }
     }
-  } catch (e) {
+  } catch (portfolioError) {
+    console.warn('Portfolio fetch failed:', portfolioError);
     portfolioData = [];
   }
-  
-  // Array de prueba con id, orden y custom_link
-  const testArray = portfolioData.map((item: any, index: number) => ({
-    orden: index + 1,
-    id: item.id,
-    title: item.title.rendered,
-    slug: item.slug,
-    custom_link: item.custom_link || 'NO_CUSTOM_LINK',
-    link: item.link
-  }));
-  
-  // Por ahora usar la API de pages que funcionaba
-  const response = await fetch(`${SITE.apiBase}/wp/v2/pages?categories=portfolio&_embed&per_page=100`);
-  const posts = await response.json();
-  
+
+  try {
+    // Obtener páginas/posts con timeout
+    const response = await fetch(`${SITE.apiBase}/wp/v2/pages?categories=portfolio&_embed&per_page=100`, {
+      headers: { 
+        Accept: "application/json",
+        'User-Agent': 'Astro-Build/1.0'
+      },
+      signal: AbortSignal.timeout(10000) // 10 segundos timeout
+    });
+
+    if (response.ok) {
+      const postsText = await response.text();
+      try {
+        posts = JSON.parse(postsText);
+        if (!Array.isArray(posts)) {
+          posts = [];
+        }
+      } catch (parseError) {
+        console.warn('Failed to parse posts data:', parseError);
+        posts = [];
+      }
+    }
+  } catch (postsError) {
+    console.warn('Posts fetch failed:', postsError);
+    posts = [];
+  }
+
+  // Si no hay posts, retornar array vacío en lugar de fallar
+  if (!posts.length) {
+    console.warn('No posts found, returning empty paths');
+    return [];
+  }
+
   // Crear mapa de custom_link -> slug de página para navegación
   const linkToSlugMap = new Map();
   posts.forEach((page: any) => {
-    linkToSlugMap.set(page.link, page.slug);
+    if (page.link) {
+      linkToSlugMap.set(page.link, page.slug);
+    }
   });
-  
-  // Mapear cada post a una ruta con navegación usando el orden del portfolio
+
+  // Mapear cada post a una ruta con navegación
   return posts.map((post: any, index: number) => {
-    // La URL actual de Astro sería /project/{slug}
+    // Validar que el post tenga los campos requeridos
+    if (!post.slug || !post.title?.rendered) {
+      console.warn('Post missing required fields:', post);
+      return null;
+    }
+
     const currentAstroUrl = `/project/${post.slug}`;
     
-    // Encontrar la posición de este post en el portfolio comparando con custom_link
+    // Encontrar la posición en el portfolio de forma segura
     const portfolioIndex = portfolioData.findIndex((portfolio: any) => {
-      // Normalizar las URLs para comparación
-      const portfolioPath = portfolio.custom_link?.replace(/^https?:\/\/[^\/]+/, '') || '';
-      return portfolioPath === currentAstroUrl;
+      try {
+        const portfolioPath = portfolio.custom_link?.replace(/^https?:\/\/[^\/]+/, '') || '';
+        return portfolioPath === currentAstroUrl;
+      } catch (e) {
+        return false;
+      }
     });
     
-    // Si no encuentra la relación, usar el índice del array de pages como fallback
-    let actualIndex;
-    if (portfolioIndex >= 0) {
-      actualIndex = portfolioIndex;
-    } else {
-      actualIndex = index; // Usar el índice del array de pages como fallback
-    }
+    const actualIndex = portfolioIndex >= 0 ? portfolioIndex : index;
     
-    // Obtener proyectos anterior y siguiente basados en el orden del portfolio
+    // Obtener proyectos anterior y siguiente de forma segura
     const prevPortfolioItem = actualIndex > 0 ? portfolioData[actualIndex - 1] : null;
     const nextPortfolioItem = actualIndex < portfolioData.length - 1 ? portfolioData[actualIndex + 1] : null;
     
@@ -76,60 +113,44 @@ export async function getStaticPaths() {
         post,
         prevProject: prevPortfolioItem,
         nextProject: nextPortfolioItem,
-        currentIndex: actualIndex + 1, // Posición real
+        currentIndex: actualIndex + 1,
         totalProjects: portfolioData.length,
-        testArray,
         linkToSlugMap: Object.fromEntries(linkToSlugMap)
       },
     };
-  });
+  }).filter(Boolean); // Filtrar nulls
 }
 
-// Recibir los datos del post y navegación
-const { post, prevProject, nextProject, currentIndex, totalProjects, testArray, linkToSlugMap }: { 
-  post: any; 
-  prevProject: any; 
-  nextProject: any;
-  currentIndex: number;
-  totalProjects: number;
-  testArray: any[];
-  linkToSlugMap: any;
-} = Astro.props;
+const { post, prevProject, nextProject, currentIndex, totalProjects, linkToSlugMap } = Astro.props;
 
-// Función para convertir componentes Button a HTML
 function processContent(content: string) {
+  if (!content) return '';
+  
   return content.replace(
     /<Button\s+text="([^"]*?)"\s+link="([^"]*?)"\s+target="([^"]*?)"\s*\/?>.*?<\/Button>?/gi,
     '<a href="$2" target="$3" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">$1</a>'
   );
 }
 
-const processedContent = processContent(post.content.rendered);
+const processedContent = processContent(post?.content?.rendered || '');
 ---
 
-<Layout frontmatter={{ title: post.title.rendered }}>
+<Layout frontmatter={{ title: post?.title?.rendered || 'Proyecto' }}>
   <div class="mb-8">
-    {post._embedded?.['wp:featuredmedia']?.[0]?.source_url && (
+    {post?._embedded?.['wp:featuredmedia']?.[0]?.source_url && (
       <img 
         src={post._embedded['wp:featuredmedia'][0].source_url} 
         alt={post.title.rendered}
         class="w-full h-64 object-cover rounded-lg mb-6"
       />
     )}
-    <!-- <div class="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-      Publicado el {new Date(post.date).toLocaleDateString('es-ES', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      })}
-    </div> -->
   </div>
   
   <article class="wp-content">
-    <div set:html={post.content.rendered}></div>
+    <div set:html={post?.content?.rendered || ''}></div>
   </article>
   
-  {post.external_link && (
+  {post?.external_link && (
     <div class="mt-6">
       <Button text="Visite esta web" link={post.external_link} target="_blank" />
     </div>
@@ -150,7 +171,7 @@ const processedContent = processContent(post.content.rendered);
             </svg>
             <div>
               <div class="text-xs uppercase tracking-wide mb-1">Anterior</div>
-              <div class="font-medium">{prevProject.title.rendered}</div>
+              <div class="font-medium">{prevProject.title?.rendered}</div>
             </div>
           </a>
         ) : (
@@ -177,7 +198,7 @@ const processedContent = processContent(post.content.rendered);
           >
             <div class="text-right">
               <div class="text-xs uppercase tracking-wide mb-1">Siguiente</div>
-              <div class="font-medium">{nextProject.title.rendered}</div>
+              <div class="font-medium">{nextProject.title?.rendered}</div>
             </div>
             <svg class="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -189,5 +210,4 @@ const processedContent = processContent(post.content.rendered);
       </div>
     </div>
   </nav>
-
 </Layout>

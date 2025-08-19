@@ -1,0 +1,13 @@
+---
+// src/components/PostCard.astro
+const { post } = Astro.props;
+const content = post.content?.rendered;
+const title = post.title?.rendered;
+const featured = post._embedded?.['wp:featuredmedia']?.[0]?.source_url;
+---
+
+<article class="rounded-lg shadow-md bg-white dark:bg-neutral-950 p-4 hover:shadow-xl transition">
+  {featured && <img src={featured} alt={title} class="w-full h-48 object-cover rounded-t-lg" />}
+  <h2 class="text-xl font-bold mt-2">{title}</h2>
+  <div class="text-sm text-gray-600" set:html={content}></div>
+</article>

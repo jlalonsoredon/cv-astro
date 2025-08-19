@@ -1,0 +1,61 @@
+---
+// Importa aquí los iconos que tengas en src/components/icons/technologies/
+import Alpine from "./Alpine.js.astro";
+import AstroLogo from "./AstroLogo.astro";
+import CSS from "./CSS3.astro";
+import HTML from "./HTML5.astro";
+import Inkscape from "./Inkscape.astro";
+import Java from "./Java.astro";
+import JavaScript from "./JavaScript.astro";
+import Laravel from "./Laravel.astro";
+import MySQL from "./MySQL.astro";
+import PHP from "./Php.astro";
+import Prestashop from "./Prestashop.astro";
+import Tailwind from "./Tailwind.astro";
+import TypeScript from "./TypeScript.astro";
+import WordPress from "./WordPress.astro";
+
+// Get props passed to this component
+export interface Props {
+  name?: string;
+  class?: string;
+}
+const { name, class: cls } = Astro.props ?? Astro;
+const key = String(name || "").toLowerCase();
+const iconClass = cls || "w-12 h-12 text-neutral-700 dark:text-neutral-200";
+---
+{key === "alpine" ? (
+  <Alpine class={iconClass} />
+) : key === "astro" ? (
+  <AstroLogo class={iconClass} />
+) : key === "css" ? (
+  <CSS class={iconClass} />
+) : key === "html" || key === "html5" ? (
+  <HTML class={iconClass} />
+) : key === "inkscape" ? (
+  <Inkscape class={iconClass} />
+) : key === "java" ? (
+  <Java class={iconClass} />
+) : key === "javascript" ? (
+  <JavaScript class={iconClass} />
+) : key === "laravel" ? (
+  <Laravel class={iconClass} />
+) : key === "tailwind" ? (
+  <Tailwind class={iconClass} />
+) : key === "mysql" ? (
+  <MySQL class={iconClass} />
+) : key === "php" ? (
+  <PHP class={iconClass} />
+) : key === "prestashop" ? (
+  <Prestashop class={iconClass} />
+) : key === "typescript" ? (
+  <TypeScript class={iconClass} />
+) : key === "wordpress" ? (
+  <WordPress class={iconClass} />
+
+) : (
+  // fallback genérico
+  <svg class={iconClass} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+    <circle cx="12" cy="12" r="9" />
+  </svg>
+)}

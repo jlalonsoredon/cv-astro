@@ -1,0 +1,193 @@
+---
+import Layout from "../../layouts/post.astro";
+import Button from "../../components/button.astro";
+import "../../styles/wp-content.css";
+import { SITE } from "../../config/site";
+
+// Función que genera todas las rutas estáticas
+export async function getStaticPaths() {
+  // Obtener datos del portfolio para crear array de prueba
+  let portfolioData: any[] = [];
+  try {
+    const portfolioResponse = await fetch(`${SITE.apiBase}/wp/v2/portfolio?_embed&per_page=100`, {
+      headers: { Accept: "application/json" }
+    });
+
+    if (portfolioResponse.ok && (portfolioResponse.headers.get("content-type") || "").includes("application/json")) {
+      const data = await portfolioResponse.json();
+      // Normalizar a array si la API devuelve objeto de error u otra forma
+      portfolioData = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
+    } else {
+      // consumir texto (HTML/error) y dejar array vacío
+      await portfolioResponse.text();
+      portfolioData = [];
+    }
+  } catch (e) {
+    portfolioData = [];
+  }
+  
+  // Array de prueba con id, orden y custom_link
+  const testArray = portfolioData.map((item: any, index: number) => ({
+    orden: index + 1,
+    id: item.id,
+    title: item.title.rendered,
+    slug: item.slug,
+    custom_link: item.custom_link || 'NO_CUSTOM_LINK',
+    link: item.link
+  }));
+  
+  // Por ahora usar la API de pages que funcionaba
+  const response = await fetch(`${SITE.apiBase}/wp/v2/pages?categories=portfolio&_embed&per_page=100`);
+  const posts = await response.json();
+  
+  // Crear mapa de custom_link -> slug de página para navegación
+  const linkToSlugMap = new Map();
+  posts.forEach((page: any) => {
+    linkToSlugMap.set(page.link, page.slug);
+  });
+  
+  // Mapear cada post a una ruta con navegación usando el orden del portfolio
+  return posts.map((post: any, index: number) => {
+    // La URL actual de Astro sería /project/{slug}
+    const currentAstroUrl = `/project/${post.slug}`;
+    
+    // Encontrar la posición de este post en el portfolio comparando con custom_link
+    const portfolioIndex = portfolioData.findIndex((portfolio: any) => {
+      // Normalizar las URLs para comparación
+      const portfolioPath = portfolio.custom_link?.replace(/^https?:\/\/[^\/]+/, '') || '';
+      return portfolioPath === currentAstroUrl;
+    });
+    
+    // Si no encuentra la relación, usar el índice del array de pages como fallback
+    let actualIndex;
+    if (portfolioIndex >= 0) {
+      actualIndex = portfolioIndex;
+    } else {
+      actualIndex = index; // Usar el índice del array de pages como fallback
+    }
+    
+    // Obtener proyectos anterior y siguiente basados en el orden del portfolio
+    const prevPortfolioItem = actualIndex > 0 ? portfolioData[actualIndex - 1] : null;
+    const nextPortfolioItem = actualIndex < portfolioData.length - 1 ? portfolioData[actualIndex + 1] : null;
+    
+    return {
+      params: { slug: post.slug },
+      props: { 
+        post,
+        prevProject: prevPortfolioItem,
+        nextProject: nextPortfolioItem,
+        currentIndex: actualIndex + 1, // Posición real
+        totalProjects: portfolioData.length,
+        testArray,
+        linkToSlugMap: Object.fromEntries(linkToSlugMap)
+      },
+    };
+  });
+}
+
+// Recibir los datos del post y navegación
+const { post, prevProject, nextProject, currentIndex, totalProjects, testArray, linkToSlugMap }: { 
+  post: any; 
+  prevProject: any; 
+  nextProject: any;
+  currentIndex: number;
+  totalProjects: number;
+  testArray: any[];
+  linkToSlugMap: any;
+} = Astro.props;
+
+// Función para convertir componentes Button a HTML
+function processContent(content: string) {
+  return content.replace(
+    /<Button\s+text="([^"]*?)"\s+link="([^"]*?)"\s+target="([^"]*?)"\s*\/?>.*?<\/Button>?/gi,
+    '<a href="$2" target="$3" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">$1</a>'
+  );
+}
+
+const processedContent = processContent(post.content.rendered);
+---
+
+<Layout frontmatter={{ title: post.title.rendered }}>
+  <div class="mb-8">
+    {post._embedded?.['wp:featuredmedia']?.[0]?.source_url && (
+      <img 
+        src={post._embedded['wp:featuredmedia'][0].source_url} 
+        alt={post.title.rendered}
+        class="w-full h-64 object-cover rounded-lg mb-6"
+      />
+    )}
+    <!-- <div class="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+      Publicado el {new Date(post.date).toLocaleDateString('es-ES', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      })}
+    </div> -->
+  </div>
+  
+  <article class="wp-content">
+    <div set:html={post.content.rendered}></div>
+  </article>
+  
+  {post.external_link && (
+    <div class="mt-6">
+      <Button text="Visite esta web" link={post.external_link} target="_blank" />
+    </div>
+  )}
+
+  <!-- Navegación entre proyectos -->
+  <nav class="mt-12 pt-8 border-t border-neutral-200 dark:border-neutral-700">
+    <div class="flex items-center justify-between">
+      <!-- Proyecto anterior -->
+      <div class="flex-1">
+        {prevProject ? (
+          <a 
+            href={prevProject.custom_link}
+            class="group flex items-center text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
+          >
+            <svg class="w-4 h-4 mr-2 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            <div>
+              <div class="text-xs uppercase tracking-wide mb-1">Anterior</div>
+              <div class="font-medium">{prevProject.title.rendered}</div>
+            </div>
+          </a>
+        ) : (
+          <div></div>
+        )}
+      </div>
+
+      <!-- Botón volver al listado -->
+      <div class="flex-shrink-0 mx-6">
+        <div class="text-center">
+          <div class="text-xs text-neutral-500 dark:text-neutral-400 mb-2">
+            {currentIndex} de {totalProjects}
+          </div>
+          <Button text="Ver todos los proyectos" link="/projects" />
+        </div>
+      </div>
+
+      <!-- Proyecto siguiente -->
+      <div class="flex-1 text-right">
+        {nextProject ? (
+          <a 
+            href={nextProject.custom_link}
+            class="group flex items-center justify-end text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
+          >
+            <div class="text-right">
+              <div class="text-xs uppercase tracking-wide mb-1">Siguiente</div>
+              <div class="font-medium">{nextProject.title.rendered}</div>
+            </div>
+            <svg class="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </a>
+        ) : (
+          <div></div>
+        )}
+      </div>
+    </div>
+  </nav>
+
+</Layout>

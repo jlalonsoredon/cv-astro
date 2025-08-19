@@ -1,0 +1,22 @@
+[
+	{
+		"name": "Inicio",
+		"url": "/"
+	},
+	{
+		"name": "Mi experiencia",
+		"url": "/experiences"
+	},
+	{
+		"name": "Mi formación",
+		"url": "/studies"
+	},
+	{
+		"name": "Mis proyectos",
+		"url": "/projects"
+	},
+	{
+		"name": "Sobre mí",
+		"url": "/about"
+	}
+]

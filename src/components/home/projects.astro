@@ -1,0 +1,45 @@
+---
+//import projects from "../../collections/projects.json";
+import Button from "../button.astro";
+import Project from "../project.astro";
+import { SITE } from "../../config/site";
+
+const { limit } = Astro.props;
+
+const apiUrl = limit 
+  ? `${SITE.apiBase}/wp/v2/portfolio?_embed&per_page=${limit}`
+  : `${SITE.apiBase}/wp-json/wp/v2/portfolio?_embed&per_page=100`;
+
+const portfolios = await fetch(apiUrl);
+const portfolioPosts = await portfolios.json();
+---
+
+<section class="max-w-4xl mx-auto px-7 lg:px-0">
+  <h2
+    class="text-2xl font-bold leading-10 tracking-tight text-neutral-900 dark:text-neutral-100"
+  >
+    Mis Proyectos
+  </h2>
+  <p class="mb-6 text-base text-neutral-600 dark:text-neutral-400">
+    Aquí tienes algunos de mis proyectos recientes. Siempre estoy trabajando en algo nuevo, así que
+    ¡vuelve pronto para ver más!
+  </p>
+  <div
+    class="grid items-stretch w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-7 mt-7"
+  >
+    {
+      portfolioPosts.map((item: any) => 
+        <Project
+          name={item.title.rendered}
+          description={item.content.rendered.replace(/<[^>]*>/g, '').substring(0, 150) + '...'}
+          image={item._embedded?.['wp:featuredmedia']?.[0]?.source_url || '/assets/images/default-project.jpg'}
+          url={item.custom_link}
+        />
+      )
+    }
+  </div>
+
+  <div class="flex items-center justify-center w-full py-5">
+    <Button text="Ver todos mis proyectos" link="/projects" />
+  </div>
+</section>

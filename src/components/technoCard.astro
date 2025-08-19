@@ -1,0 +1,94 @@
+---
+import { SITE } from "../config/site";
+import Icon from "./icons/technologies/Icon.astro";
+
+// Props: count opcional, categoryId filtro opcional
+const { count, categoryId } = Astro.props;
+const limit = Number(count) || undefined;
+const catId = Number(categoryId) || undefined;
+
+// Construir endpoint de posts de forma robusta
+const apiBase = (SITE.apiBase || "").replace(/\/$/, "");
+const postsEndpoint = apiBase.endsWith("/wp-json")
+  ? `${apiBase}/wp/v2/posts`
+  : `${apiBase}/wp-json/wp/v2/posts`;
+
+let portfolioData: any[] = [];
+try {
+  const q = catId ? `?categories=${catId}&_embed&per_page=100` : "?_embed&per_page=100";
+  const res = await fetch(`${postsEndpoint}${q}`, { headers: { Accept: "application/json" } });
+
+  if (res.ok && (res.headers.get("content-type") || "").includes("application/json")) {
+    const data = await res.json();
+    portfolioData = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
+  } else {
+    await res.text();
+    portfolioData = [];
+  }
+} catch {
+  portfolioData = [];
+}
+
+const source = Array.isArray(portfolioData) ? portfolioData : [];
+
+// util: limpiar/convertir excerpt/html a texto con saltos
+const formatDescription = (html: string) => {
+  const decodeEntities = (str: string) =>
+    String(str || "")
+      .replace(/\[\s*&hellip;\s*\]/gi, "…")
+      .replace(/&hellip;/gi, "…")
+      .replace(/&nbsp;/gi, " ")
+      .replace(/&amp;/gi, "&")
+      .replace(/&quot;/gi, '"')
+      .replace(/&#039;/gi, "'")
+      .replace(/&lt;/gi, "<")
+      .replace(/&gt;/gi, ">");
+  let text = decodeEntities(html || "")
+    .replace(/<\s*br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|li|h[1-6])\s*>/gi, "\n\n")
+    .replace(/<[^>]*>/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  text = text.replace(/([.!?])\s+/g, "$1\n");
+  return text;
+};
+---
+<!-- grid: items-stretch para que los child se hagan h-full -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+  {
+    source.slice(0, limit || source.length).map((post: any) => {
+      const html = post.excerpt?.rendered || post.content?.rendered || "";
+      const descriptionText = formatDescription(html);
+      const iconName = String(post.icon || post.acf?.icon || post.meta?.icon || post.slug || "").toLowerCase();
+
+      return (
+        <div class="relative rounded-2xl h-full">
+          {/* contenedor con h-full y layout columnar */}
+          <div class="relative border border-dashed rounded-2xl p-6 bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-700 h-full flex flex-col">
+            {/* Reemplazado <a> por <div> - sin enlace ni cursor pointer */}
+            <div class="h-full">
+              {/* distribuir espacio entre header (icon+título) y footer (descripcion) */}
+              <div class="flex flex-col h-full justify-between">
+                <div class="flex flex-col items-start text-left">
+                  <div class="mb-4">
+                    <Icon name={iconName} class="w-12 h-12 text-neutral-700 dark:text-neutral-200" />
+                  </div>
+
+                  <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
+                    {post.title?.rendered}
+                  </h3>
+                </div>
+
+                <div class="mt-4">
+                  <p class="text-sm text-neutral-600 dark:text-neutral-400 whitespace-pre-line break-words leading-relaxed">
+                    {descriptionText}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    })
+  }
+</div>

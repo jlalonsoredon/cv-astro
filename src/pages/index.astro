@@ -1,0 +1,91 @@
+---
+import Button from "../components/button.astro";
+import Projects from "../components/home/projects.astro";
+import Separator from "../components/home/separator.astro";
+import Writings from "../components/home/experiences.astro";
+import Studies from "../components/home/studies.astro";
+import Layout from "../layouts/main.astro";
+import { SITE } from "../config/site";
+import { CATEGORIES } from "../config/categories";
+
+const profile = await fetch(`${SITE.apiBase}/wp/v2/posts?categories=${CATEGORIES.PROFILE}&_embed`);
+const profilePosts = await profile.json();
+
+const experiences = await fetch(`${SITE.apiBase}/wp/v2/posts?categories=${CATEGORIES.EXPERIENCE}&_embed`);
+const experiencePosts = await experiences.json();
+---
+
+<Layout title="Jose Luis Alonso">
+  <div
+    class="relative z-20 w-full max-w-4xl mx-auto mt-16 px-7 md:mt-24 lg:mt-32 xl:px-0 bg-white dark:bg-neutral-950"
+  >
+    <div class="flex flex-col items-center md:flex-row">
+      <div class="relative w-full md:w-1/2">
+        <h1
+          class="mb-5 text-4xl font-bold leading-tight md:text-4xl lg:text-6xl dark:text-white"
+        >
+          Hola, soy Jose Luis.
+        </h1>
+        <section class="grid gap-6">
+          {profilePosts.map((post: any) => (
+           <div class="text-base text-neutral-600 dark:text-neutral-400" 
+            set:html={post.excerpt.rendered}></div>
+          ))}
+        </section>
+
+        <Button link={SITE.social.linkedin} target="_blank">
+          Sígueme en
+          <svg xmlns="http://www.w3.org/2000/svg"  width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 
+                    2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14
+                    c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5
+                    -12.268c-.966 0-1.75-.79-1.75-1.764
+                    s.784-1.764 1.75-1.764 1.75.79 
+                    1.75 1.764-.783 1.764-1.75 1.764zm13.5 
+                    12.268h-3v-5.604c0-3.368-4-3.113-4 
+                    0v5.604h-3v-11h3v1.765c1.396-2.586 
+                    7-2.777 7 2.476v6.759z"/>
+          </svg>
+        </Button>
+      </div>
+      <div
+        class="relative justify-end hidden w-full mt-10 md:flex md:pl-10 md:w-1/2 md:mt-0 md:translate-y-4 xl:translate-y-0"
+      >
+        <div class="relative z-50 w-full">
+          <div
+            class="absolute bottom-0 z-40 w-16 h-16 -translate-x-6 -translate-y-1/2 lg:top-auto top-0 lg:-translate-y-[330px] rounded-full"
+          >
+            <span
+              class="relative z-20 flex items-center justify-center w-full h-full text-2xl border-8 border-white rounded-full dark:border-neutral-950 bg-neutral-100 dark:bg-neutral-900"
+            >
+              <span
+                class="flex items-center justify-center w-full h-full bg-white border border-dashed rounded-full dark:bg-neutral-950 border-neutral-300 dark:border-neutral-700"
+                >👋</span
+              >
+            </span>
+          </div>
+          <div class="relative z-30 px-10">
+            <img
+              src="/assets/images/photo.png"
+              loading="eager"
+              decoding="auto"
+              class="relative z-30 w-full aspect-[790/1189] md:max-w-md mx-auto dark:-translate-y-0.5"
+            />
+          </div>
+          <div
+            class="absolute bottom-0 right-0 z-20 w-full h-full lg:h-[420px] translate-x-0 -translate-y-px border border-dashed rounded-2xl bg-gradient-to-r dark:from-neutral-950 dark:via-black dark:to-neutral-950 from-white via-neutral-50 to-white border-neutral-300 dark:border-neutral-700"
+          >
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <Separator text="Últimas experiencias" />
+  <Writings />
+  <Separator text="Últimas formaciones" />
+  <Studies />
+  <Separator text="Mis últimos proyectos" />
+  <Projects limit={6} />
+  
+</Layout>

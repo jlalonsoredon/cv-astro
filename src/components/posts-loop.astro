@@ -1,0 +1,101 @@
+---
+import { SITE } from "../config/site";
+import Briefcase from "./icons/Briefcase.astro";
+import Brain from "./icons/Brain.astro";
+import Cap from "./icons/Cap.astro";
+import Ribon from "./icons/Ribon.astro";
+import { CATEGORIES } from "../config/categories";
+
+// Props: count opcional, categoryId filtro opcional
+const { count, categoryId } = Astro.props;
+const limit = Number(count) || undefined;
+const catId = Number(categoryId) || undefined;
+
+// Construir endpoint de posts de forma robusta
+const apiBase = (SITE.apiBase || "").replace(/\/$/, "");
+const postsEndpoint = apiBase.endsWith("/wp-json")
+  ? `${apiBase}/wp/v2/posts`
+  : `${apiBase}/wp-json/wp/v2/posts`;
+
+let portfolioData: any[] = [];
+try {
+  const q = catId ? `?categories=${catId}&_embed&per_page=100` : "?_embed&per_page=100";
+  const res = await fetch(`${postsEndpoint}${q}`, { headers: { Accept: "application/json" } });
+
+  if (res.ok && (res.headers.get("content-type") || "").includes("application/json")) {
+    const data = await res.json();
+    portfolioData = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
+  } else {
+    await res.text();
+    portfolioData = [];
+  }
+} catch {
+  portfolioData = [];
+}
+
+const source = Array.isArray(portfolioData) ? portfolioData : [];
+
+// util: limpiar/convertir excerpt/html a texto con saltos
+const formatDescription = (html: string) => {
+  const decodeEntities = (str: string) =>
+    String(str || "")
+      .replace(/\[\s*&hellip;\s*\]/gi, "…")
+      .replace(/&hellip;/gi, "…")
+      .replace(/&nbsp;/gi, " ")
+      .replace(/&amp;/gi, "&")
+      .replace(/&quot;/gi, '"')
+      .replace(/&#039;/gi, "'")
+      .replace(/&lt;/gi, "<")
+      .replace(/&gt;/gi, ">");
+  let text = decodeEntities(html || "")
+    .replace(/<\s*br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|li|h[1-6])\s*>/gi, "\n\n")
+    .replace(/<[^>]*>/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  text = text.replace(/([.!?])\s+/g, "$1\n");
+  return text;
+};
+---
+{
+  // render: usar misma tarjeta para cada post (icono según categoría)
+  source.slice(0, limit || source.length).map((post: any) => {
+    const postCat = Array.isArray(post.categories) ? post.categories[0] : post.categories;
+    const catNum = Number(postCat || 0);
+    const html = post.excerpt?.rendered || post.content?.rendered || "";
+    const descriptionText = formatDescription(html);
+
+    return (
+      <div class="relative border border-transparent border-dashed p-7 group rounded-2xl">
+        <div class="absolute inset-0 z-20 w-full h-full duration-300 ease-out bg-white border border-dashed dark:bg-neutral-950 rounded-2xl border-neutral-300 dark:border-neutral-600 group-hover:-translate-x-1 group-hover:-translate-y-1" />
+        <div class="absolute inset-0 z-10 w-full h-full duration-300 ease-out border border-dashed rounded-2xl border-neutral-300 dark:border-neutral-600 group-hover:translate-x-1 group-hover:translate-y-1" />
+        {/* Reemplazado <a> por <div> - sin enlace ni cursor pointer */}
+        <div class="relative z-30 block duration-300 ease-out group-hover:-translate-x-1 group-hover:-translate-y-1">
+          <div class="flex items-center space-x-2 mb-3">
+            {catId === CATEGORIES.EXPERIENCE  ? (
+              <Briefcase class="flex-none w-6 h-6 text-neutral-700 dark:text-neutral-200" />
+            ) : catId ===  CATEGORIES.STUDIES_OTHER ? (
+              <Ribon class="flex-none w-6 h-6 text-neutral-700 dark:text-neutral-200" />
+            ) : catId === CATEGORIES.STUDIES_FORMAL   ? (
+              <Cap class="flex-none w-6 h-6 text-neutral-700 dark:text-neutral-200" />
+            ) : (
+              <svg class="flex-none w-6 h-6 text-neutral-700 dark:text-neutral-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="9" />
+              </svg>
+            )}
+            <h2 class="flex items-center">
+              <span class="text-base font-bold leading-tight tracking-tight sm:text-lg dark:text-neutral-100">{post.title?.rendered}</span>
+            </h2>
+          </div>
+
+          <div class="mt-2.5 text-xs font-medium text-neutral-800 dark:text-neutral-300">{post.duration || ""}</div>
+          <div class="mt-2.5 text-xs font-medium text-neutral-800 dark:text-neutral-300">{post.company || ""}</div>
+
+          <div class="whitespace-pre-line break-words leading-relaxed text-sm text-neutral-600 dark:text-neutral-400 mt-3">
+            {descriptionText}
+          </div>
+        </div>
+      </div>
+    );
+  })
+}

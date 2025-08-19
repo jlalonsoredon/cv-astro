@@ -1,0 +1,43 @@
+---
+import Button from "../button.astro";
+import PostsLoop from "../posts-loop.astro";
+import { CATEGORIES } from "../../config/categories";
+
+const feed = "https://feed.miantiao.me/";
+---
+
+<section class="max-w-4xl mx-auto px-7 lg:px-0">
+  <h2
+    class="text-2xl font-bold leading-10 tracking-tight text-neutral-900 dark:text-neutral-100"
+  >
+    Mi formación
+  </h2>
+  <p class="mb-6 text-base text-neutral-600 dark:text-neutral-400">
+    A lo largo de toda mi carrera he tenido una formación continua en diversas áreas, desde la enseñanza hasta el desarrollo web.
+  </p>
+
+  <div class="w-full max-w-4xl mx-auto my-7 xl:px-0 md:grid-cols-2">
+    <div
+      class="flex flex-col items-start justify-start md:flex-row md:space-x-7"
+    >
+      <div class="w-full space-y-7 md:w-1/2">
+        <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+          Formación reglada
+        </h3>
+        <PostsLoop count="3" categoryId={CATEGORIES.STUDIES_FORMAL}/>
+
+        
+      </div>
+      <div class="w-full md:w-1/2 space-y-7 md:mt-0">
+        <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+          Otras formaciones
+        </h3>
+        <PostsLoop count="3" categoryId={CATEGORIES.STUDIES_OTHER}/>
+      </div> 
+
+    </div>
+    <div class="flex items-center justify-center w-full py-5">
+      <Button text="Ver todas mis formaciones" link="/studies" />
+    </div>
+  </div>
+</section>

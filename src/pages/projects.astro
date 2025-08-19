@@ -1,0 +1,46 @@
+---
+import PageHeading from "../components/page-heading.astro";
+import Project from "../components/project.astro";
+import Layout from "../layouts/main.astro";
+import { SITE } from "../config/site";
+
+let portfolioPosts: any[] = [];
+
+try {
+  const res = await fetch(
+    `${SITE.apiBase}/wp/v2/portfolio?_embed&per_page=100`,
+    { headers: { Accept: "application/json" } }
+  );
+
+  if (res.ok && (res.headers.get("content-type") || "").includes("application/json")) {
+    portfolioPosts = await res.json();
+  } else {
+    // lee y descarta el HTML para no lanzar error
+    await res.text();
+    portfolioPosts = [];
+  }
+} catch {
+  portfolioPosts = [];
+}
+---
+
+<Layout title="My Projects">
+  <section class="relative z-20 max-w-2xl mx-auto my-12 px-7 lg:px-0">
+    <PageHeading
+      title="Mis Proyectos"
+      description="Aquí están algunos de los proyectos actuales en los que he estado trabajando. Realmente disfruto crear nuevos proyectos y tener nuevas ideas. Siempre estoy trabajando en algo nuevo, ¡así que vuelve a consultar a menudo!"
+    />
+
+    <div class="z-50 grid items-stretch w-full grid-cols-1 my-8 gap-7 sm:gap-5 sm:grid-cols-2">
+      {portfolioPosts.map((item: any) => (
+        <Project
+          name={item.title?.rendered}
+          // corta y limpia el HTML del contenido
+          description={(item.content?.rendered || "").replace(/<[^>]*>/g, "").substring(0, 100) + "..."}
+          image={item._embedded?.["wp:featuredmedia"]?.[0]?.source_url || "/assets/images/default-project.jpg"}
+          url={item.custom_link}
+        />
+      ))}
+    </div>
+  </section>
+</Layout>

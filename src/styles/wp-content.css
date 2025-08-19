@@ -1,0 +1,63 @@
+/* Estilos generales para el contenido de WordPress */
+  /* Contenedor general del contenido de WP */
+  .wp-content {
+    line-height: 1.7;
+    font-size: 1rem;
+  }
+  .wp-content::after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
+  .wp-content p {
+    margin-bottom: 1.2rem;
+  }
+
+  .wp-content img {
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+    display: block;
+    margin: 1.5rem auto;
+    border-radius: 0.5rem;
+  }
+
+  .wp-content figure {
+    margin: 1.5rem auto;
+    text-align: center;
+  }
+
+  .wp-content figcaption {
+    font-size: 0.875rem;
+    color: #666;
+    margin-top: 0.5rem;
+  }
+
+  .wp-content h2, .wp-content h3 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-weight: bold;
+  }
+
+  .wp-content a {
+    color: #2563eb; /* azul */
+    text-decoration: underline;
+  }
+
+  /* Clases típicas de WordPress */
+  .wp-content .aligncenter {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .wp-content .alignleft {
+    float: left;
+    margin-right: 1rem;
+  }
+
+  .wp-content .alignright {
+    float: right;
+    margin-left: 1rem;
+  }

@@ -1,0 +1,41 @@
+---
+import Layout from "../../layouts/post.astro";
+import { SITE } from "../../config/site";
+
+// Función que genera todas las rutas estáticas
+export async function getStaticPaths() {
+  // Aquí vas a fetch a tu API de WordPress
+  const response = await fetch(`${SITE.apiBase}/wp-json/wp/v2/pages?categories=portfolio&_embed`);
+  const posts = await response.json();
+  
+  // Mapear cada post a una ruta
+  return posts.map((post: any) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+// Recibir los datos del post
+const { post }: { post: any } = Astro.props;
+---
+
+<Layout frontmatter={{ title: post.title.rendered }}>
+  <div class="mb-8">
+    {post._embedded?.['wp:featuredmedia']?.[0]?.source_url && (
+      <img 
+        src={post._embedded['wp:featuredmedia'][0].source_url} 
+        alt={post.title.rendered}
+        class="w-full h-64 object-cover rounded-lg mb-6"
+      />
+    )}
+    <div class="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+      Publicado el {new Date(post.date).toLocaleDateString('es-ES', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      })}
+    </div>
+  </div>
+  
+  <div set:html={post.content.rendered}></div>
+</Layout>

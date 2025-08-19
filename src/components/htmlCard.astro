@@ -1,0 +1,101 @@
+---
+import { SITE } from "../config/site";
+import Icon from "./icons/technologies/Icon.astro";
+
+// Props: count opcional, categoryId filtro opcional
+const { count, categoryId } = Astro.props;
+const limit = Number(count) || undefined;
+const catId = Number(categoryId) || undefined;
+
+// Construir endpoint de posts de forma robusta
+const apiBase = (SITE.apiBase || "").replace(/\/$/, "");
+const postsEndpoint = apiBase.endsWith("/wp-json")
+  ? `${apiBase}/wp/v2/posts`
+  : `${apiBase}/wp-json/wp/v2/posts`;
+
+let postData: any[] = [];
+try {
+  const q = catId ? `?categories=${catId}&_embed&per_page=100` : "?_embed&per_page=100";
+  const res = await fetch(`${postsEndpoint}${q}`, { headers: { Accept: "application/json" } });
+
+  if (res.ok && (res.headers.get("content-type") || "").includes("application/json")) {
+    const data = await res.json();
+    postData = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
+  } else {
+    await res.text();
+    postData = [];
+  }
+} catch {
+  postData = [];
+}
+
+const source = Array.isArray(postData) ? postData : [];
+
+// util: procesar HTML con párrafos y URLs completas
+const processHtmlContent = (html: string) => {
+  let processed = String(html || "")
+    // Decodificar entidades HTML básicas
+    .replace(/&hellip;/gi, "…")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#039;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">");
+
+  // Si no tiene etiquetas HTML, convertir saltos de línea en párrafos
+  if (!/<[^>]+>/.test(processed)) {
+    processed = processed
+      .split('\n')
+      .filter(line => line.trim() !== '')
+      .map(line => `<p>${line.trim()}</p>`)
+      .join('');
+  }
+
+  // Completar URLs relativas con baseUrl
+  const baseUrl = SITE.baseUrl.replace(/\/$/, "");
+  processed = processed
+    // href relativos que empiezan con /
+    .replace(/href="\/([^"]*?)"/g, `href="${baseUrl}/$1"`)
+    // src relativos que empiezan con /
+    .replace(/src="\/([^"]*?)"/g, `src="${baseUrl}/$1"`)
+    // href relativos sin / inicial
+    .replace(/href="([^"]*?)" /g, (match, url) => {
+      if (!url.startsWith('http') && !url.startsWith('mailto:') && !url.startsWith('#')) {
+        return `href="${baseUrl}/${url}" `;
+      }
+      return match;
+    })
+    // src relativos sin / inicial
+    .replace(/src="([^"]*?)" /g, (match, url) => {
+      if (!url.startsWith('http') && !url.startsWith('data:')) {
+        return `src="${baseUrl}/${url}" `;
+      }
+      return match;
+    });
+
+  return processed;
+};
+---
+<!-- flex: items alineados horizontalmente -->
+<div class="flex flex-wrap gap-4">
+  {
+    source.slice(0, limit || source.length).map((post: any) => {
+      const htmlContent = post.content?.rendered || post.excerpt?.rendered || "";
+      const processedHtml = processHtmlContent(htmlContent);
+      const iconName = String(post.icon || post.acf?.icon || post.meta?.icon || post.slug || "").toLowerCase();
+
+      return (
+        <div class="relative group flex-1 min-w-0">
+          <div class="mt-4">
+            {/* Aplicar flex directamente al contenedor del HTML */}
+            <div 
+              class="flex flex-wrap gap-4 text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed [&>div]:flex-1 [&>div]:min-w-0 [&>div]:p-4 [&>div]:rounded-xl [&>div]:bg-white [&>div]:dark:bg-neutral-950"
+              set:html={processedHtml}
+            />
+          </div>
+        </div>  
+      );
+    })
+  }
+</div>

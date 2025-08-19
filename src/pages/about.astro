@@ -1,0 +1,68 @@
+---
+import experiences from "../collections/experiences.json";
+import AboutExperience from "../components/about-experience.astro";
+import PageHeading from "../components/page-heading.astro";
+import Layout from "../layouts/main.astro";
+import { CATEGORIES } from "../config/categories";
+import TechnoCard from "../components/technoCard.astro";
+import HtmlCard from "../components/htmlCard.astro";
+
+---
+
+<Layout title="About Me">
+  <section class="relative z-20 max-w-2xl mx-auto my-12 px-7 lg:px-0">
+    <PageHeading
+      title="Sobre mí"
+      description="Hola 👋 Soy un ingeniero frontend de Nanjing, China. Me apasiona construir nuevos productos y aprender nuevas tecnologías."
+    />
+
+    <img src="/assets/images/about3.png" class="relative z-30 w-full my-10 rounded-xl" />
+
+    <h2 class="mb-2 text-2xl font-bold dark:text-neutral-200">Short Bio</h2>
+    <p
+      class="text-sm leading-6 text-gray-600 dark:text-neutral-400 sm:leading-7 lg:leading-8 sm:text-base lg:text-lg"
+    >
+      Front-end cutter 🧑🏻‍💻, back-end amateur 🤷🏻‍♂️, operations digging holes person 🤦🏻‍♂️.
+    </p>
+
+    <h2
+      class="mt-5 mb-2 text-2xl font-bold lg:mt-10 sm:mt-6 dark:text-neutral-200"
+    >
+      Tecnologías
+    </h2>
+    <p class="mb-6 text-base text-neutral-600 dark:text-neutral-400">
+      Esto es una recopilación de las tecnologías que he utilizado a lo largo de mi carrera. Algunas de ellas son mis favoritas y las utilizo con frecuencia, mientras que otras las he aprendido en proyectos específicos.
+    </p>
+
+    <div class="w-full max-w-4xl mx-auto my-7 xl:px-0 md:grid-cols-2">
+      <TechnoCard categoryId={CATEGORIES.TECHNOLOGIES} />
+    </div>
+
+    <h2
+      class="mt-5 mb-2 text-2xl font-bold lg:mt-10 sm:mt-6 dark:text-neutral-200"
+    >
+      Aficciones
+    </h2>
+    <p class="mb-6 text-base text-neutral-600 dark:text-neutral-400">
+      Aquí hay una lista de mis aficiones e intereses fuera del trabajo.
+    </p>
+
+    <div class="w-full mx-auto xl:px-0 md:grid-cols-2">
+      <HtmlCard categoryId={CATEGORIES.HOBBIES} />
+    </div>
+
+
+    <h2 class="mt-5 mb-2 text-2xl font-bold lg:mt-10 sm:mt-6 dark:text-neutral-200">Let's Connect</h2>
+    <p
+      class="text-sm leading-6 text-gray-600 dark:text-neutral-400 sm:leading-7 lg:leading-8 sm:text-base lg:text-lg"
+    >
+      If you want to stay up to date with my work be sure to <a
+        href="https://x.com/0xKaibi"
+        target="_blank"
+        class="text-indigo-600 underline">follow me on twitter</a
+      >, or you can send me an <a href="mailto:astro-aria#miantiao.me" class="text-indigo-600 underline"
+        >email</a
+      > and I'll be sure to get back to you.
+    </p>
+  </section>
+</Layout>

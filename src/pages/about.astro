@@ -6,24 +6,76 @@ import Layout from "../layouts/main.astro";
 import { CATEGORIES } from "../config/categories";
 import TechnoCard from "../components/technoCard.astro";
 import HtmlCard from "../components/htmlCard.astro";
+import { SITE } from "../config/site";
 
+// Simple stripHtml utility function
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, '');
+}
+
+// Fetch con manejo robusto de errores
+let profilePosts: any[] = [];
+
+try {
+  // Validar que la API esté disponible
+  if (SITE.apiBase && !SITE.apiBase.includes('localhost')) {
+    console.log('Fetching profile data from:', `${SITE.apiBase}/wp/v2/posts?categories=${CATEGORIES.PROFILE}&_embed`);
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
+    
+    const response = await fetch(`${SITE.apiBase}/wp/v2/posts?categories=${CATEGORIES.PROFILE}&_embed`, {
+      headers: { 
+        Accept: "application/json",
+        'User-Agent': 'Astro-Build/1.0'
+      },
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (response.ok) {
+      const data = await response.json();
+      profilePosts = Array.isArray(data) ? data : [];
+      console.log(`Profile posts loaded: ${profilePosts.length} items`);
+    } else {
+      console.warn(`Profile fetch failed with status: ${response.status}`);
+      profilePosts = [];
+    }
+  } else {
+    console.warn('API Base not configured for production or is localhost');
+    profilePosts = [];
+  }
+} catch (error) {
+  console.warn('Profile fetch failed:', error);
+  profilePosts = [];
+}
+
+// Datos por defecto si no hay profile
+const defaultProfile = {
+  excerpt: { 
+    rendered: "Desarrollador web con experiencia en tecnologías modernas y pasión por crear soluciones digitales innovadoras." 
+  }
+};
 ---
 
 <Layout title="About Me">
   <section class="relative z-20 max-w-2xl mx-auto my-12 px-7 lg:px-0">
-    <PageHeading
-      title="Sobre mí"
-      description="Hola 👋 Soy un ingeniero frontend de Nanjing, China. Me apasiona construir nuevos productos y aprender nuevas tecnologías."
-    />
-
+    {profilePosts.length > 0 ? (
+      profilePosts.map((post: any) => (
+        <PageHeading
+          title="Sobre mí"
+          description={stripHtml(post?.content?.rendered || post?.excerpt?.rendered || defaultProfile.excerpt.rendered)}
+        />
+      ))
+    ) : (
+      <PageHeading
+        title="Sobre mí"
+        description={defaultProfile.excerpt.rendered}
+      />
+    )}
+    
     <img src="/assets/images/about3.png" class="relative z-30 w-full my-10 rounded-xl" />
-
-    <h2 class="mb-2 text-2xl font-bold dark:text-neutral-200">Short Bio</h2>
-    <p
-      class="text-sm leading-6 text-gray-600 dark:text-neutral-400 sm:leading-7 lg:leading-8 sm:text-base lg:text-lg"
-    >
-      Front-end cutter 🧑🏻‍💻, back-end amateur 🤷🏻‍♂️, operations digging holes person 🤦🏻‍♂️.
-    </p>
 
     <h2
       class="mt-5 mb-2 text-2xl font-bold lg:mt-10 sm:mt-6 dark:text-neutral-200"
@@ -41,7 +93,7 @@ import HtmlCard from "../components/htmlCard.astro";
     <h2
       class="mt-5 mb-2 text-2xl font-bold lg:mt-10 sm:mt-6 dark:text-neutral-200"
     >
-      Aficciones
+      Aficiones
     </h2>
     <p class="mb-6 text-base text-neutral-600 dark:text-neutral-400">
       Aquí hay una lista de mis aficiones e intereses fuera del trabajo.
@@ -50,7 +102,6 @@ import HtmlCard from "../components/htmlCard.astro";
     <div class="w-full mx-auto xl:px-0 md:grid-cols-2">
       <HtmlCard categoryId={CATEGORIES.HOBBIES} />
     </div>
-
 
     <h2 class="mt-5 mb-2 text-2xl font-bold lg:mt-10 sm:mt-6 dark:text-neutral-200">Let's Connect</h2>
     <p

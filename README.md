@@ -1,48 +1,137 @@
-# Astro Starter Kit: Basics
+# Portfolio Personal con Astro + WordPress API
 
-```sh
-pnpm create astro@latest -- --template basics
+Este proyecto es un **portfolio personal desarrollado con Astro**, aprovechando las ventajas de rendimiento que ofrece este framework moderno para crear una experiencia web ultrarrápida y optimizada.
+
+## 🚀 Rendimiento con Astro
+
+**Astro** se destaca por su arquitectura "Zero JavaScript by default", lo que significa que:
+
+- **Carga instantánea**: Las páginas se renderizan como HTML estático, eliminando el JavaScript innecesario
+- **Hidratación selectiva**: Solo los componentes interactivos cargan JavaScript cuando es necesario
+- **Optimización automática**: Minificación, tree-shaking y code-splitting están integrados
+- **Core Web Vitals excelentes**: Tiempos de carga sub-segundo y puntuaciones perfectas en PageSpeed
+
+## 📡 Integración con WordPress API
+
+El contenido se gestiona a través de la **WordPress REST API**, proporcionando:
+
+### Flexibilidad de contenido:
+- Posts categorizados (experiencia, formación, tecnologías, aficiones)
+- Gestión de medios e imágenes optimizada
+- Estructura de datos consistente con WP
+
+### Arquitectura híbrida:
+```typescript
+// Fetch durante build-time para SSG
+const response = await fetch(`${SITE.apiBase}/wp/v2/posts?categories=${CATEGORIES.PROFILE}`);
+```
+### Beneficios de esta arquitectura:
+- **Editor familiar**: Los contenidos se gestionan desde el panel de WordPress
+- **Separación de responsabilidades**: Frontend (Astro) + Backend (WordPress)
+- **Escalabilidad**: El CMS puede crecer independientemente del frontend
+- **SEO optimizado**: HTML pre-renderizado con contenido dinámico
+
+## 🛠 Características Técnicas
+
+- **Static Site Generation (SSG)**: Páginas pre-generadas en build time
+- **Gestión de categorías centralizada**: Configuración unificada en `categories.ts`
+- **Componentes reutilizables**: `PostsLoop`, `TechnoCard`, `HtmlCard`
+- **Manejo robusto de errores**: Fallbacks para fallos de API
+- **TypeScript**: Tipado estático para mayor confiabilidad
+- **Tailwind CSS**: Diseño responsive y optimizado
+
+## 📁 Estructura del Proyecto
+
+```
+src/
+├── components/
+│   ├── icons/technologies/     # Iconos de tecnologías
+│   ├── home/                   # Componentes de página principal
+│   ├── posts-loop.astro        # Loop de posts
+│   ├── technoCard.astro        # Tarjetas de tecnologías
+│   └── htmlCard.astro          # Tarjetas con contenido HTML
+├── config/
+│   ├── site.ts                 # Configuración del sitio
+│   └── categories.ts           # IDs de categorías centralizadas
+├── layouts/
+│   └── main.astro              # Layout principal
+└── pages/
+    ├── index.astro             # Página principal
+    ├── about.astro             # Página sobre mí
+    ├── experiences.astro       # Experiencias
+    ├── studies.astro           # Formación
+    └── project/[slug].astro    # Páginas dinámicas de proyectos
 ```
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/basics)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/basics)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/basics/devcontainer.json)
+## ⚙️ Configuración
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
-
-![just-the-basics](https://github.com/withastro/astro/assets/2244813/a0a5533c-a856-4198-8470-2d67b1d7c554)
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src/
-│   ├── layouts/
-│   │   └── Layout.astro
-│   └── pages/
-│       └── index.astro
-└── package.json
+### Variables de entorno (.env)
+```env
+PUBLIC_BASE_URL=https://tudominio.com/
+PUBLIC_API_BASE=https://tudominio.com/wp-json
+PUBLIC_LINKEDIN=https://www.linkedin.com/in/tu-perfil
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+### Categorías WordPress
+```typescript
+export const CATEGORIES = {
+  PROFILE: 1,
+  STUDIES_FORMAL: 2,
+  STUDIES_OTHER: 3,
+  EXPERIENCE: 4,
+  TECHNOLOGIES: 5,
+  PORTFOLIO: 6,
+  HOBBIES: 8
+} as const;
+```
 
-## 🧞 Commands
+## 🚀 Instalación y Desarrollo
 
-All commands are run from the root of the project, from a terminal:
+```bash
+# Clonar el repositorio
+git clone https://github.com/tu-usuario/tu-portfolio.git
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `pnpm install`             | Installs dependencies                            |
-| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
-| `pnpm build`           | Build your production site to `./dist/`          |
-| `pnpm preview`         | Preview your build locally, before deploying     |
-| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `pnpm astro -- --help` | Get help using the Astro CLI                     |
+# Instalar dependencias
+npm install
 
-## 👀 Want to learn more?
+# Configurar variables de entorno
+cp .env.example .env
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+# Desarrollo local
+npm run dev
+
+# Build para producción
+npm run build
+
+# Preview del build
+npm run preview
+```
+
+## 📱 Características del Portfolio
+
+- **Página principal**: Resumen de perfil, experiencias y proyectos destacados
+- **Sobre mí**: Información personal, tecnologías y aficiones
+- **Experiencias**: Historial laboral y profesional
+- **Formación**: Educación formal y cursos complementarios
+- **Proyectos**: Portfolio de trabajos con navegación entre proyectos
+
+## 🌐 Deploy
+
+Compatible con:
+- **Vercel** (recomendado)
+- **Netlify**
+- **GitHub Pages**
+- Cualquier hosting que soporte sitios estáticos
+
+## 📈 Resultados
+
+El resultado es un **portfolio que combina la velocidad de Astro con la flexibilidad de WordPress**, ofreciendo:
+- Tiempos de carga < 1 segundo
+- Puntuación perfecta en Lighthouse
+- SEO optimizado
+- Gestión de contenidos intuitiva
+- Experiencia de usuario excepcional
+
+---
+
+Desarrollado con ❤️ usando [Astro](https://astro.build) y [WordPress](https://wordpress.org)

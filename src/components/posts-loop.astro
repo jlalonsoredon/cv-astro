@@ -1,7 +1,6 @@
 ---
 import { SITE } from "../config/site";
 import Briefcase from "./icons/Briefcase.astro";
-import Brain from "./icons/Brain.astro";
 import Cap from "./icons/Cap.astro";
 import Ribon from "./icons/Ribon.astro";
 import { CATEGORIES } from "../config/categories";
@@ -61,7 +60,6 @@ const formatDescription = (html: string) => {
   // render: usar misma tarjeta para cada post (icono según categoría)
   source.slice(0, limit || source.length).map((post: any) => {
     const postCat = Array.isArray(post.categories) ? post.categories[0] : post.categories;
-    const catNum = Number(postCat || 0);
     const html = post.excerpt?.rendered || post.content?.rendered || "";
     const descriptionText = formatDescription(html);
 

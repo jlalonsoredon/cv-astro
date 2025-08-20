@@ -1,6 +1,5 @@
 ---
 import { SITE } from "../config/site";
-import Icon from "./icons/technologies/Icon.astro";
 
 // Props: count opcional, categoryId filtro opcional
 const { count, categoryId } = Astro.props;
@@ -83,7 +82,6 @@ const processHtmlContent = (html: string) => {
     source.slice(0, limit || source.length).map((post: any) => {
       const htmlContent = post.content?.rendered || post.excerpt?.rendered || "";
       const processedHtml = processHtmlContent(htmlContent);
-      const iconName = String(post.icon || post.acf?.icon || post.meta?.icon || post.slug || "").toLowerCase();
 
       return (
         <div class="relative group flex-1 min-w-0">

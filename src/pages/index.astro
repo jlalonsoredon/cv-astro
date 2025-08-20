@@ -8,11 +8,37 @@ import Layout from "../layouts/main.astro";
 import { SITE } from "../config/site";
 import { CATEGORIES } from "../config/categories";
 
-const profile = await fetch(`${SITE.apiBase}/wp/v2/posts?categories=${CATEGORIES.PROFILE}&_embed`);
-const profilePosts = await profile.json();
+// Fetch con manejo de errores
+let introPosts: any[] = [];
 
-const experiences = await fetch(`${SITE.apiBase}/wp/v2/posts?categories=${CATEGORIES.EXPERIENCE}&_embed`);
-const experiencePosts = await experiences.json();
+try {
+  if (SITE.apiBase && !SITE.apiBase.includes('localhost')) {
+    const intro = await fetch(`${SITE.apiBase}/wp/v2/posts?categories=${CATEGORIES.INTRO}&_embed`);
+    if (intro.ok) {
+      introPosts = await intro.json();
+      if (!Array.isArray(introPosts)) {
+        introPosts = [];
+      }
+    }
+  }
+} catch (error) {
+  console.warn('Error fetching intro posts:', error);
+  introPosts = [];
+}
+
+// util: decodificar entidades HTML manteniendo las etiquetas
+const decodeHtmlEntities = (html: string) => {
+  return String(html || "")
+    .replace(/\\u003C/g, "<")
+    .replace(/\\u003E/g, ">")
+    .replace(/&hellip;/gi, "…")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#039;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">");
+};
 ---
 
 <Layout title="Jose Luis Alonso">
@@ -26,11 +52,20 @@ const experiencePosts = await experiences.json();
         >
           Hola, soy Jose Luis.
         </h1>
-        <section class="grid gap-6">
-          {profilePosts.map((post: any) => (
-           <div class="text-base text-neutral-600 dark:text-neutral-400" 
-            set:html={post.excerpt.rendered}></div>
-          ))}
+        
+        {/* Renderizar HTML directamente desde la API */}
+        <section class="grid gap-6 mb-8">
+          {introPosts.map((post: any) => {
+            const htmlContent = post?.content?.rendered || post?.excerpt?.rendered || '';
+            const decodedHtml = decodeHtmlEntities(htmlContent);
+            
+            return (
+              <div 
+                class="leading-relaxed text-sm text-neutral-600 dark:text-neutral-400 mt-3"
+                set:html={decodedHtml}
+              />
+            );
+          })}
         </section>
 
         <Button link={SITE.social.linkedin} target="_blank">

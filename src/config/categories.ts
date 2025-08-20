@@ -5,7 +5,8 @@ export const CATEGORIES = {
   EXPERIENCE: 4,
   TECHNOLOGIES: 5,
   PORTFOLIO: 6,
-  HOBBIES: 8
+  HOBBIES: 8,
+  INTRO: 206
 } as const;
 
 export type CategoryKey = keyof typeof CATEGORIES;

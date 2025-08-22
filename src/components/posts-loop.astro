@@ -59,7 +59,6 @@ const formatDescription = (html: string) => {
 {
   // render: usar misma tarjeta para cada post (icono según categoría)
   source.slice(0, limit || source.length).map((post: any) => {
-    const postCat = Array.isArray(post.categories) ? post.categories[0] : post.categories;
     const html = post.excerpt?.rendered || post.content?.rendered || "";
     const descriptionText = formatDescription(html);
 

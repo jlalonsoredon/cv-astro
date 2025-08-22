@@ -73,14 +73,6 @@ export async function getStaticPaths() {
     return [];
   }
 
-  // Crear mapa de custom_link -> slug de página para navegación
-  const linkToSlugMap = new Map();
-  posts.forEach((page: any) => {
-    if (page.link) {
-      linkToSlugMap.set(page.link, page.slug);
-    }
-  });
-
   // Mapear cada post a una ruta con navegación
   return posts.map((post: any, index: number) => {
     // Validar que el post tenga los campos requeridos
@@ -115,22 +107,13 @@ export async function getStaticPaths() {
         nextProject: nextPortfolioItem,
         currentIndex: actualIndex + 1,
         totalProjects: portfolioData.length,
-        linkToSlugMap: Object.fromEntries(linkToSlugMap)
       },
     };
   }).filter(Boolean); // Filtrar nulls
 }
 
-const { post, prevProject, nextProject, currentIndex, totalProjects, linkToSlugMap } = Astro.props;
+const { post, prevProject, nextProject, currentIndex, totalProjects } = Astro.props;
 
-function processContent(content: string) {
-  if (!content) return '';
-  
-  return content.replace(
-    /<Button\s+text="([^"]*?)"\s+link="([^"]*?)"\s+target="([^"]*?)"\s*\/?>.*?<\/Button>?/gi,
-    '<a href="$2" target="$3" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">$1</a>'
-  );
-}
 
 ---
 

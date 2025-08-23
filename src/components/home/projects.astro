@@ -33,6 +33,7 @@ const portfolioPosts = await portfolios.json();
           name={item.title.rendered}
           description={item.content.rendered.replace(/<[^>]*>/g, '').substring(0, 150) + '...'}
           image={item._embedded?.['wp:featuredmedia']?.[0]?.source_url || '/assets/images/default-project.jpg'}
+          alt={item.alt_text || item.title.rendered}
           url={item.custom_link}
         />
       )

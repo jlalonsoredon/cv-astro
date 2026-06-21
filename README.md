@@ -2,6 +2,11 @@
 
 Este proyecto es un **portfolio personal desarrollado con Astro**, aprovechando las ventajas de rendimiento que ofrece este framework moderno para crear una experiencia web ultrarrápida y optimizada.
 
+## 🌐 Producción
+
+- URL de producción: https://joseluisalonsoredondo.es/
+- Imagen CV: ![CV](../cv.jpg)
+
 ## 🚀 Rendimiento con Astro
 
 **Astro** se destaca por su arquitectura "Zero JavaScript by default", lo que significa que:

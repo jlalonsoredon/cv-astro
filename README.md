@@ -5,7 +5,7 @@ Este proyecto es un **portfolio personal desarrollado con Astro**, aprovechando 
 ## 🌐 Producción
 
 - URL de producción: https://joseluisalonsoredondo.es/
-- Imagen CV: ![CV](../cv.jpg)
+- Imagen CV: ![CV](cv.jpg)
 
 ## 🚀 Rendimiento con Astro
 

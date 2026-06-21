@@ -9,8 +9,10 @@ import Java from "./Java.astro";
 import JavaScript from "./JavaScript.astro";
 import Laravel from "./Laravel.astro";
 import MySQL from "./MySQL.astro";
+import Pandas from "./Pandas.astro";
 import PHP from "./Php.astro";
 import Prestashop from "./Prestashop.astro";
+import Python from "./Python.astro";
 import Tailwind from "./Tailwind.astro";
 import TypeScript from "./TypeScript.astro";
 import WordPress from "./WordPress.astro";
@@ -40,14 +42,18 @@ const iconClass = cls || "w-12 h-12 text-neutral-700 dark:text-neutral-200";
   <JavaScript class={iconClass} />
 ) : key === "laravel" ? (
   <Laravel class={iconClass} />
-) : key === "tailwind" ? (
-  <Tailwind class={iconClass} />
 ) : key === "mysql" ? (
   <MySQL class={iconClass} />
+) : key === "pandas" ? (
+  <Pandas class={iconClass} />
 ) : key === "php" ? (
   <PHP class={iconClass} />
 ) : key === "prestashop" ? (
   <Prestashop class={iconClass} />
+) : key === "python" ? (
+  <Python class={iconClass} />
+) : key === "tailwind" ? (
+  <Tailwind class={iconClass} />
 ) : key === "typescript" ? (
   <TypeScript class={iconClass} />
 ) : key === "wordpress" ? (
